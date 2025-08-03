@@ -1,103 +1,204 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useState } from 'react'
+import {
+  useTodosStore,
+  useTodoStatsStore,
+  useCreateTodoStore,
+  useDeleteTodoStore,
+  useToggleTodoStore,
+  useUpdateTodoStore,
+} from '@/lib/hooks'
+import { useCompletedCount, usePendingCount, useCompletionRate } from '@/lib/stores/todo-store'
+import type { Todo, TodoFilters, CreateTodoInput } from '@/lib/schemas/todo'
+
+// Import components
+import {
+  TodoStatsPanel,
+  TodoFiltersPanel,
+  TodoForm,
+  TodoList,
+} from './components'
+
+export default function HomePage() {
+  // Component internal state management
+  const [page, setPage] = useState(1)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [filters, setFilters] = useState<TodoFilters>({
+    category: 'all',
+    priority: 'all',
+    completed: 'all',
+  })
+  const [formData, setFormData] = useState<CreateTodoInput>({
+    title: '',
+    description: '',
+    priority: 'medium',
+    category: 'personal',
+  })
+
+  // Zustand store hooks
+  const { todos, isLoading: todosLoading, error: todosError, totalCount, hasMore } = useTodosStore(page, filters)
+  const { stats, isLoading: statsLoading } = useTodoStatsStore()
+  const { createTodo, isMutating: isCreating, error: createError } = useCreateTodoStore()
+  const { deleteTodo } = useDeleteTodoStore()
+  const { toggleComplete } = useToggleTodoStore()
+  const { updateTodo } = useUpdateTodoStore()
+
+  // Get computed statistics from store
+  const completedCount = useCompletedCount()
+  const pendingCount = usePendingCount()
+  const completionRate = useCompletionRate()
+
+  // Handle todo creation
+  const handleCreateTodo = async () => {
+    if (!formData.title.trim()) return
+
+    try {
+      await createTodo(formData)
+      setFormData({
+        title: '',
+        description: '',
+        priority: 'medium',
+        category: 'personal',
+      })
+      setShowAddForm(false)
+    } catch (error) {
+      console.error('Failed to create todo:', error)
+    }
+  }
+
+  // Handle toggle completion status
+  const handleToggleComplete = async (todo: Todo) => {
+    try {
+      await toggleComplete(todo)
+    } catch (error) {
+      console.error('Failed to toggle completion status:', error)
+    }
+  }
+
+  // Handle todo deletion
+  const handleDeleteTodo = async (todo: Todo) => {
+    if (!confirm('Are you sure you want to delete this todo?')) return
+
+    try {
+      await deleteTodo(todo)
+    } catch (error) {
+      console.error('Failed to delete todo:', error)
+    }
+  }
+
+  // Handle filter changes
+  const handleFilterChange = (key: keyof TodoFilters, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+    setPage(1) // Reset to first page
+  }
+
+  // Handle todo updates
+  const handleUpdateTodo = async (updatedTodo: Todo) => {
+    try {
+      await updateTodo(updatedTodo)
+    } catch (error) {
+      console.error('Failed to update todo:', error)
+    }
+  }
+
+  // Handle form field changes
+  const handleFieldChange = <K extends keyof CreateTodoInput>(key: K, value: CreateTodoInput[K]) => {
+    setFormData(prev => ({ ...prev, [key]: value }))
+  }
+
+  // Use store computed statistics if API stats are not available
+  const displayStats = stats || {
+    total: todos.length,
+    completed: completedCount,
+    pending: pendingCount,
+    completionRate,
+    categoryStats: {},
+    priorityStats: {},
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
+        <header className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            📝 TodoList (Zustand)
+          </h1>
+          <p className="text-gray-600">State management with Zustand</p>
+        </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+        {/* Statistics panel */}
+        <TodoStatsPanel stats={displayStats} isLoading={statsLoading} />
+
+        {/* Filters and add form section */}
+        <section className="bg-white rounded-lg shadow-sm border p-6">
+          <TodoFiltersPanel
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            showAddForm={showAddForm}
+            onToggleAddForm={() => setShowAddForm(!showAddForm)}
+          />
+
+          {/* Add form */}
+          {showAddForm && (
+            <TodoForm
+              formData={formData}
+              onFieldChange={handleFieldChange}
+              onSubmit={handleCreateTodo}
+              isSubmitting={isCreating}
+              isValid={formData.title.trim().length > 0}
+              error={createError as Error}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          )}
+        </section>
+
+        {/* Todo list */}
+        <TodoList
+          todos={todos}
+          total={totalCount}
+          page={page}
+          hasMore={hasMore}
+          isLoading={todosLoading}
+          error={todosError}
+          onToggleComplete={handleToggleComplete}
+          onDelete={handleDeleteTodo}
+          onUpdate={handleUpdateTodo}
+          onPageChange={setPage}
+        />
+
+        {/* Technology stack info */}
+        <div className="mt-12 bg-white p-6 rounded-lg shadow-sm border">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Technology Stack</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl mb-2">⚛️</div>
+              <div className="font-medium text-sm">React 19</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl mb-2">🔄</div>
+              <div className="font-medium text-sm">SWR 2.3</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl mb-2">🐻</div>
+              <div className="font-medium text-sm">Zustand 5</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl mb-2">🎨</div>
+              <div className="font-medium text-sm">Tailwind CSS</div>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Architecture info */}
+        <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+          <h3 className="text-lg font-semibold text-blue-900 mb-2">Architecture Design</h3>
+          <p className="text-blue-800 text-sm">
+            This project uses a <strong>simplified Zustand approach</strong>:
+            Only core business data (Todo list) is managed by Zustand, while UI state (filters, forms, pagination) 
+            is managed within components. This maintains simplicity while avoiding over-engineering.
+          </p>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
