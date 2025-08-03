@@ -49,27 +49,26 @@ export type PatchTodoInput = z.infer<typeof PatchTodoSchema>
 
 // 常量定义
 export const CATEGORIES = [
-  { value: 'all', label: '全部分类' },
-  { value: 'work', label: '工作' },
-  { value: 'personal', label: '个人' },
-  { value: 'learning', label: '学习' },
-  { value: 'health', label: '健康' },
+  { value: 'all', label: 'all' },
+  { value: 'work', label: 'work' },
+  { value: 'personal', label: 'personal' },
+  { value: 'learning', label: 'learning' },
+  { value: 'health', label: 'health' },
 ] as const
 
 export const PRIORITIES = [
-  { value: 'all', label: '全部优先级' },
-  { value: 'high', label: '高优先级', color: 'text-red-600 bg-red-50' },
-  { value: 'medium', label: '中优先级', color: 'text-yellow-600 bg-yellow-50' },
-  { value: 'low', label: '低优先级', color: 'text-green-600 bg-green-50' },
+  { value: 'all', label: 'all' },
+  { value: 'high', label: 'high', color: 'text-red-600 bg-red-50' },
+  { value: 'medium', label: 'medium', color: 'text-yellow-600 bg-yellow-50' },
+  { value: 'low', label: 'low', color: 'text-green-600 bg-green-50' },
 ] as const
 
 export const COMPLETION_STATUS = [
-  { value: 'all', label: '全部状态' },
-  { value: 'false', label: '未完成' },
-  { value: 'true', label: '已完成' },
+  { value: 'all', label: 'all' },
+  { value: 'false', label: 'pending' },
+  { value: 'true', label: 'complete' },
 ] as const
 
-// 筛选器类型
 export type TodoFilters = {
   category: string
   priority: string

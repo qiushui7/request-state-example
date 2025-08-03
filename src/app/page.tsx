@@ -14,10 +14,10 @@ import type { Todo, TodoFilters, CreateTodoInput } from '@/lib/schemas/todo'
 
 // Import components
 import {
-  TodoStatsPanel,
   TodoFiltersPanel,
   TodoForm,
   TodoList,
+  TodoStatsChart,
 } from './components'
 
 export default function HomePage() {
@@ -120,15 +120,9 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
-        <header className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            📝 TodoList (Zustand)
-          </h1>
-          <p className="text-gray-600">State management with Zustand</p>
-        </header>
 
-        {/* Statistics panel */}
-        <TodoStatsPanel stats={displayStats} isLoading={statsLoading} />
+        {/* Statistics section */}
+        <TodoStatsChart stats={displayStats} isLoading={statsLoading} />
 
         {/* Filters and add form section */}
         <section className="bg-white rounded-lg shadow-sm border p-6">
@@ -165,39 +159,6 @@ export default function HomePage() {
           onUpdate={handleUpdateTodo}
           onPageChange={setPage}
         />
-
-        {/* Technology stack info */}
-        <div className="mt-12 bg-white p-6 rounded-lg shadow-sm border">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Technology Stack</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl mb-2">⚛️</div>
-              <div className="font-medium text-sm">React 19</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl mb-2">🔄</div>
-              <div className="font-medium text-sm">SWR 2.3</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl mb-2">🐻</div>
-              <div className="font-medium text-sm">Zustand 5</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl mb-2">🎨</div>
-              <div className="font-medium text-sm">Tailwind CSS</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Architecture info */}
-        <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">Architecture Design</h3>
-          <p className="text-blue-800 text-sm">
-            This project uses a <strong>simplified Zustand approach</strong>:
-            Only core business data (Todo list) is managed by Zustand, while UI state (filters, forms, pagination) 
-            is managed within components. This maintains simplicity while avoiding over-engineering.
-          </p>
-        </div>
       </div>
     </div>
   )

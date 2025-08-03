@@ -31,7 +31,7 @@ This TodoList application showcases best practices for building modern React app
 │                 │    │                 │    │                 │
 │ • API responses │    │ • Todo data     │    │ • UI state      │
 │ • Cache keys    │    │ • Computed vals │    │ • Form data     │
-│ • Revalidation  │    │ • Optimistic   │    │ • Filters       │
+│ • Revalidation  │    │ • Optimistic    │    │ • Filters       │
 │                 │    │   updates       │    │ • Pagination    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
